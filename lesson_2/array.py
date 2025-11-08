@@ -44,5 +44,3 @@ def modified_bubble_sort(arr):
     return arr
 
 print(bubble_sort([8, 4, 3, 5, 9, 7]))
-
-

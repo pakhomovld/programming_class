@@ -44,17 +44,42 @@ func array_max(arr []int) int {
 
 func modified_bubble_sort(arr []int) []int {
 	start := time.Now()
-	for !array_check_sorted(arr) {
+	i := 0
+	for i < len(arr)-1 {
+		fmt.Println(arr)
+		fmt.Println(arr[i], arr[i+1])
+		if arr[i] > arr[i+1] {
+			left := arr[i]
+			arr[i] = arr[i+1]
+			arr[i+1] = left
+			if i > 0 {
+				i--
+			}
+		} else {
+			i++
+		}
+	}
+	elapsed := time.Since(start)
+	fmt.Printf("it took %s\n", elapsed)
+	return arr
+}
+
+func bubble_sort_original(arr []int) []int {
+	start := time.Now()
+	for true {
+		sorted := true
 		for i := 0; i < len(arr)-1; i++ {
+			fmt.Println(arr)
+			fmt.Println(arr[i], arr[i+1])
 			if arr[i] > arr[i+1] {
 				left := arr[i]
 				arr[i] = arr[i+1]
 				arr[i+1] = left
-				if i > 0 {
-					i--
-				}
+				sorted = false
 			}
-
+		}
+		if sorted {
+			break
 		}
 	}
 	elapsed := time.Since(start)
@@ -64,20 +89,12 @@ func modified_bubble_sort(arr []int) []int {
 
 func main() {
 	var arr = []int{
-		34, 7, 23, 32, 5, 62, 78, 21, 43, 56,
-		9, 81, 17, 39, 44, 3, 58, 29, 11, 65,
-		2, 76, 15, 50, 90, 27, 60, 18, 73, 8,
-		24, 49, 33, 40, 19, 6, 77, 13, 48, 55,
-		31, 84, 20, 53, 12, 70, 36, 16, 85, 4,
-		28, 59, 22, 66, 37, 10, 79, 25, 54, 41,
-		14, 61, 26, 74, 30, 51, 1, 38, 83, 35,
-		71, 44, 68, 9, 72, 42, 67, 80, 47, 69,
-		75, 55, 10, 82, 44, 6, 16, 53, 35, 19,
-		32, 62, 7, 21, 57, 29, 4, 68, 15, 25,
-	}
+		34, 7, 23, 32, 5, 62, 78, 21, 43, 56}
 	//arr := []int{2, 1, 5, 3, 9, 7, 10, 12, 4, 13, 11}
-	//	fmt.Println(array_check_sorted(arr))
-	fmt.Println(bubble_sort(arr))
-	//	fmt.Println(array_max(arr))
-	fmt.Println(modified_bubble_sort(arr))
+	//fmt.Println(array_check_sorted(arr))
+	//fmt.Println(bubble_sort(arr))
+	//fmt.Println(array_max(arr))
+	//fmt.Println(modified_bubble_sort(arr))
+	//fmt.Println(bubble_sort_original(arr))
+	//fmt.Println(selection_sort(arr))
 }
