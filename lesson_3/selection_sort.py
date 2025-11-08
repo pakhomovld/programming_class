@@ -16,4 +16,4 @@ def selection_sort(arr):
     return arr
 
 
-print(selection_sort([3, 2, 9, 4, 5, 6]))
+print(selection_sort([3, 2, 9, 4, 8, 5]))

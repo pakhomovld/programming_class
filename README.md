@@ -6,3 +6,6 @@ I write all my lessons in one language and then translate them into another. For
 What is factorial, how to calculate it. What is recursive, how to write recursive function.
 # lesson_2
 What is arrays, how to find max value of array, how to check if array sorted or not, how to use bubble sort and how to make a little modification to bubble sort, to increase it performance.
+# lesson_3
+What is selection sort, how to find min value of array(same as max, but vice versa).
+Pick minimal value in array and put it to the left pointer, left pointer moving to the right every iteration(j in selection_sort.py)
