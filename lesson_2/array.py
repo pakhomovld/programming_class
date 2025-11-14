@@ -32,7 +32,7 @@ def array_max(arr):
 print(array_max([1, 2, 7, 8, 9]))
 
 
-def modified_bubble_sort(arr):
+def gnome_sort(arr):
     while array_check_sorted(arr) != True:
         for i in range(len(arr) -1):
             if arr[i] > arr[i+1]:

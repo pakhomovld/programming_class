@@ -15,7 +15,7 @@ func array_check_sorted(arr []int) bool {
 
 }
 
-func bubble_sort(arr []int) []int {
+func simplified_bubble_sort(arr []int) []int {
 	start := time.Now()
 	for !array_check_sorted(arr) {
 		for i := 0; i < len(arr)-1; i++ {
@@ -42,7 +42,7 @@ func array_max(arr []int) int {
 	return max
 }
 
-func modified_bubble_sort(arr []int) []int {
+func gnome_sort(arr []int) []int {
 	start := time.Now()
 	i := 0
 	for i < len(arr)-1 {
@@ -87,14 +87,32 @@ func bubble_sort_original(arr []int) []int {
 	return arr
 }
 
+func bubble_sort(arr []int) []int {
+	n := len(arr)
+	for {
+		swapped := false
+		for i := 1; i < n; i++ {
+			if arr[i-1] > arr[i] {
+				arr[i-1], arr[i] = arr[i], arr[i-1]
+				swapped = true
+			}
+		}
+		if !swapped {
+			break
+		}
+	}
+	return arr
+}
+
 func main() {
 	var arr = []int{
 		34, 7, 23, 32, 5, 62, 78, 21, 43, 56}
 	//arr := []int{2, 1, 5, 3, 9, 7, 10, 12, 4, 13, 11}
 	//fmt.Println(array_check_sorted(arr))
-	//fmt.Println(bubble_sort(arr))
+	//fmt.Println(simplified_bubble_sort(arr))
 	//fmt.Println(array_max(arr))
-	//fmt.Println(modified_bubble_sort(arr))
+	//fmt.Println(gnome_sort(arr))
 	//fmt.Println(bubble_sort_original(arr))
 	//fmt.Println(selection_sort(arr))
+	fmt.Println(bubble_sort(arr))
 }
