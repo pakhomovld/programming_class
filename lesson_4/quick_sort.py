@@ -13,7 +13,9 @@
 # 1 2 3 4 5 6 8 9
 
 def qsort(arr: [int]) -> [int]:
-    if arr:
+    if not arr:
+        return []
+    else:
         arr_before = []
         arr_after = []
         first = arr[0]
@@ -24,8 +26,6 @@ def qsort(arr: [int]) -> [int]:
                 arr_after.append(arr[i])
         
         return qsort(arr_before) + [first] + qsort(arr_after)
-    else:
-        return []
 
 
 arr = [5, 4, 2, 6, 1, 3, 9, 8]
