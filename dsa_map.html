@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA Coverage Map</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%230a0a0a'/><text x='10' y='72' font-family='monospace' font-size='65' font-weight='bold' fill='%2300ff41'>%3E_</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface-hover: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #d0d0d0;
+    --text-muted: #666;
+    --text-dim: #444;
+    --green: #00ff41;
+    --green-dim: #00cc33;
+    --green-bg: rgba(0,255,65,0.06);
+    --green-border: rgba(0,255,65,0.2);
+    --yellow: #ffcc00;
+    --yellow-bg: rgba(255,204,0,0.06);
+    --yellow-border: rgba(255,204,0,0.2);
+    --red: #ff3333;
+    --red-bg: rgba(255,51,51,0.04);
+    --red-border: rgba(255,51,51,0.15);
+    --cyan: #00ccff;
+    --purple: #cc66ff;
+    --orange: #ff8800;
+    --track: #1a1a1a;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 32px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Scan lines overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ---- HEADER ---- */
+  header { text-align: center; margin-bottom: 32px; }
+  header h1 {
+    font-size: 24px; font-weight: 700; margin-bottom: 4px;
+    color: var(--green); letter-spacing: 2px; text-transform: uppercase;
+  }
+  header p { color: var(--text-dim); font-size: 12px; margin-bottom: 24px; letter-spacing: 1px; }
+
+  .summary {
+    display: flex; align-items: center; justify-content: center;
+    gap: 32px; flex-wrap: wrap;
+  }
+
+  .ring-container { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+  .ring-container svg { transform: rotate(-90deg); }
+  .ring-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ring-text .pct { font-size: 28px; font-weight: 800; color: var(--green); }
+  .ring-text small { font-size: 9px; font-weight: 400; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; }
+
+  .stat-cards { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 12px 18px; text-align: center; min-width: 90px;
+  }
+  .stat-card .num { font-size: 22px; font-weight: 800; }
+  .stat-card .label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .stat-card.green .num { color: var(--green); }
+  .stat-card.yellow .num { color: var(--yellow); }
+  .stat-card.red .num { color: var(--red); }
+
+  /* ---- LEARN NEXT ---- */
+  .learn-next {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 18px 20px; margin-bottom: 20px;
+  }
+  .learn-next h2 {
+    font-size: 13px; font-weight: 700; margin-bottom: 12px;
+    color: var(--green); text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .learn-next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+  .next-card {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 10px 12px; transition: border-color 0.2s;
+  }
+  .next-card:hover { border-color: var(--green); }
+  .next-card-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+  .next-card-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .next-card-rec { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+  .next-card-category { font-size: 9px; color: var(--purple); background: rgba(204,102,255,0.08); padding: 1px 5px; }
+
+  /* ---- FILTERS ---- */
+  .filters { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filters-label { font-size: 11px; color: var(--text-dim); margin-right: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .filter-btn {
+    font-size: 11px; font-weight: 600; font-family: var(--mono);
+    padding: 4px 12px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .filter-btn:hover { border-color: var(--text-muted); color: var(--text); }
+  .filter-btn.active { background: var(--green); border-color: var(--green); color: #000; }
+  .filter-btn.active-green { background: var(--green); border-color: var(--green); color: #000; }
+  .filter-btn.active-yellow { background: var(--yellow); border-color: var(--yellow); color: #000; }
+  .filter-btn.active-red { background: var(--red); border-color: var(--red); color: #000; }
+
+  /* ---- GRID ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #3a3a3a; }
+  .card.hidden { display: none; }
+
+  .card-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px; cursor: pointer; user-select: none; transition: background 0.15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-header:hover { background: var(--surface-hover); }
+
+  .card-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .card-count { font-size: 11px; color: var(--text-dim); margin-left: 2px; flex-shrink: 0; }
+
+  .card-bar {
+    flex: 1; min-width: 40px; height: 4px;
+    background: var(--track); overflow: hidden; margin-left: auto;
+    border: 1px solid var(--border);
+  }
+  .card-bar-fill { height: 100%; transition: width 0.5s ease; }
+
+  .card-pct { font-size: 11px; font-weight: 700; min-width: 32px; text-align: right; flex-shrink: 0; }
+
+  .chevron { font-size: 10px; color: var(--text-dim); transition: transform 0.25s; flex-shrink: 0; }
+  .card.collapsed .chevron { transform: rotate(-90deg); }
+
+  .card-body {
+    max-height: 1200px; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 6px 14px 10px;
+  }
+  .card.collapsed .card-body { max-height: 0; padding-top: 0; padding-bottom: 0; }
+
+  /* ---- TOPIC ROW ---- */
+  .topic {
+    padding: 8px 10px; margin-bottom: 2px; font-size: 12px;
+    transition: background 0.15s; border-left: 2px solid transparent;
+  }
+  .topic:hover { background: rgba(255,255,255,0.02); }
+  .topic:last-child { margin-bottom: 0; }
+  .topic.hidden { display: none; }
+
+  .topic.covered { border-left-color: var(--green); background: var(--green-bg); }
+  .topic.partial { border-left-color: var(--yellow); background: var(--yellow-bg); }
+  .topic.not_covered { border-left-color: transparent; background: var(--red-bg); opacity: 0.6; }
+  .topic.not_covered:hover { opacity: 1; }
+
+  .topic-main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .status-tag {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 1px 6px; flex-shrink: 0; min-width: 44px; text-align: center;
+    border: 1px solid;
+  }
+  .status-tag.covered { border-color: var(--green-border); color: var(--green); }
+  .status-tag.partial { border-color: var(--yellow-border); color: var(--yellow); }
+  .status-tag.not_covered { border-color: var(--red-border); color: var(--red); }
+
+  .topic-name { font-weight: 500; }
+  .topic.not_covered .topic-name { color: var(--text-muted); }
+
+  .badges { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; }
+  .badge { font-size: 10px; padding: 0 5px; font-weight: 500; white-space: nowrap; }
+  .badge-lesson { color: var(--cyan); }
+  .badge-lang { color: var(--purple); }
+
+  .diff-tag { font-size: 9px; font-weight: 600; padding: 0px 5px; flex-shrink: 0; border: 1px solid; }
+  .diff-easy { border-color: rgba(0,255,65,0.2); color: var(--green-dim); }
+  .diff-medium { border-color: rgba(255,204,0,0.2); color: var(--yellow); }
+  .diff-hard { border-color: rgba(255,51,51,0.2); color: var(--red); }
+
+  .depth-label { display: flex; align-items: center; gap: 4px; flex-shrink: 0; font-size: 10px; color: var(--text-dim); }
+  .depth-bar { width: 36px; height: 3px; background: var(--border); overflow: hidden; }
+  .depth-bar-fill { height: 100%; background: var(--green-dim); transition: width 0.3s; }
+
+  .spacer { flex: 1; }
+
+  .prereq { font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+  .prereq span { color: var(--orange); }
+
+  .rec { font-size: 10px; color: var(--text-dim); text-align: right; }
+  .topic.not_covered:hover .rec { color: var(--text-muted); }
+
+  .topic-files { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; padding-left: 52px; }
+  .file-link {
+    font-size: 10px; color: var(--cyan); text-decoration: none;
+    padding: 1px 6px; background: rgba(0,204,255,0.06); border: 1px solid rgba(0,204,255,0.15);
+    font-family: var(--mono); transition: all 0.15s; cursor: pointer;
+  }
+  .file-link:hover { background: rgba(0,204,255,0.12); border-color: var(--cyan); }
+
+  /* ---- FOOTER ---- */
+  footer {
+    text-align: center; padding: 16px; color: var(--text-dim); font-size: 10px;
+    border-top: 1px solid var(--border); letter-spacing: 0.5px;
+  }
+  .legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+  .legend-swatch { width: 10px; height: 10px; border: 1px solid; flex-shrink: 0; }
+  .legend-swatch.green { background: var(--green-bg); border-color: var(--green-border); border-left: 2px solid var(--green); }
+  .legend-swatch.yellow { background: var(--yellow-bg); border-color: var(--yellow-border); border-left: 2px solid var(--yellow); }
+  .legend-swatch.red { background: var(--red-bg); border-color: var(--red-border); }
+
+  @media (max-width: 500px) {
+    body { padding: 16px 10px; }
+    .grid { grid-template-columns: 1fr; }
+    .learn-next-grid { grid-template-columns: 1fr; }
+    .summary { gap: 16px; }
+    .rec { display: none; }
+    .prereq { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&gt; DSA Coverage Map_</h1>
+  <p>// data structures & algorithms progress // programming_class</p>
+  <div class="summary">
+    <div class="ring-container">
+      <svg width="130" height="130">
+        <circle cx="65" cy="65" r="56" fill="none" stroke="var(--border)" stroke-width="8"/>
+        <circle id="ring" cx="65" cy="65" r="56" fill="none" stroke="var(--green)" stroke-width="8"
+          stroke-linecap="butt" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+      </svg>
+      <div class="ring-text">
+        <span class="pct" id="ring-pct">0%</span>
+        <small>covered</small>
+      </div>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num" id="s-total">0</div><div class="label">topics</div></div>
+      <div class="stat-card green"><div class="num" id="s-covered">0</div><div class="label">covered</div></div>
+      <div class="stat-card yellow"><div class="num" id="s-partial">0</div><div class="label">partial</div></div>
+      <div class="stat-card red"><div class="num" id="s-not">0</div><div class="label">not covered</div></div>
+    </div>
+  </div>
+</header>
+
+<section class="learn-next" id="learn-next"></section>
+
+<div class="filters" id="filters"></div>
+
+<main class="grid" id="app"></main>
+
+<footer>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch green"></span> covered</div>
+    <div class="legend-item"><span class="legend-swatch yellow"></span> partial</div>
+    <div class="legend-item"><span class="legend-swatch red"></span> not covered</div>
+    <div class="legend-item" style="gap:8px">
+      <span class="diff-tag diff-easy">easy</span>
+      <span class="diff-tag diff-medium">medium</span>
+      <span class="diff-tag diff-hard">hard</span>
+    </div>
+  </div>
+  <div style="margin-top:6px">
+    depth = how thoroughly a topic was studied (brief > basic > solid > deep > mastery)
+  </div>
+  <div style="margin-top:8px">programming_class // updated feb 2026</div>
+</footer>
+
+<script>
+const GITHUB = 'https://github.com/pakhomovld/programming_class/blob/main/';
+
+const categories = [
+  {
+    name: "Sorting Algorithms", icon: "\u2195\uFE0F",
+    topics: [
+      { name: "Bubble Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"] },
+      { name: "Gnome Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 2, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"] },
+      { name: "Selection Sort", status: "covered", lesson: "L3", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/selection_sort.py", "sorting/selection_sort.go"] },
+      { name: "Merge Sort", status: "covered", lesson: "L4", lang: "Go", depth: 3, diff: "medium", files: ["sorting/merge_sort.go"] },
+      { name: "Quick Sort", status: "covered", lesson: "L4", lang: "Py", depth: 3, diff: "medium", files: ["sorting/quick_sort.py"] },
+      { name: "Insertion Sort", status: "not_covered", diff: "easy", rec: "Natural next step \u2014 simple O(n\u00B2) sort, great for nearly-sorted data" },
+      { name: "Heap Sort", status: "not_covered", diff: "medium", requires: ["Heap / Priority Queue"], rec: "Learn after Heaps data structure" },
+      { name: "Counting / Radix Sort", status: "not_covered", diff: "medium", rec: "Non-comparison O(n) sorts for bounded integers" },
+    ]
+  },
+  {
+    name: "Recursion", icon: "\uD83D\uDD04",
+    topics: [
+      { name: "Basic Recursion / Factorial", status: "covered", lesson: "L1", lang: "Py, Go", depth: 4, diff: "easy", files: ["recursion/factorial.py", "recursion/factorial.go"] },
+      { name: "Backtracking / Permutations", status: "covered", lesson: "L5", lang: "Py, Go", depth: 3, diff: "medium", files: ["recursion/permutations.py", "recursion/permutations.go"] },
+      { name: "Tower of Hanoi", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "medium", files: ["recursion/hanoi.py"] },
+      { name: "Recursive Math (addition, mult)", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "easy", files: ["recursion/addition_of_two.py", "recursion/multiplication_arr.py"] },
+      { name: "Memoized Recursion", status: "not_covered", diff: "easy", rec: "Bridge to Dynamic Programming" },
+    ]
+  },
+  {
+    name: "Searching", icon: "\uD83D\uDD0D",
+    topics: [
+      { name: "Linear Search", status: "partial", lesson: "L2\u2013L3", lang: "Py, Go", depth: 1, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/selection_sort.py"] },
+      { name: "Binary Search", status: "not_covered", diff: "easy", rec: "Essential O(log n) search \u2014 high priority" },
+      { name: "Binary Search Variants", status: "not_covered", diff: "medium", requires: ["Binary Search"], rec: "Lower/upper bound \u2014 common in interviews" },
+    ]
+  },
+  {
+    name: "String Algorithms", icon: "\uD83D\uDCDD",
+    topics: [
+      { name: "String Manipulation (C)", status: "covered", lesson: "L7", lang: "C", depth: 4, diff: "medium", files: ["strings/string_utils.c"] },
+      { name: "Run-length Encoding", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "easy", files: ["strings/string_compression_3.py"] },
+      { name: "Palindrome Validation", status: "covered", lesson: "L6, L7", lang: "Py, C", depth: 4, diff: "easy", files: ["strings/valid_palindrome.py", "strings/string_utils.c"] },
+      { name: "Substring Search (naive)", status: "covered", lesson: "L7", lang: "C", depth: 3, diff: "medium", files: ["strings/string_utils.c"] },
+      { name: "KMP / Rabin-Karp", status: "not_covered", diff: "hard", rec: "Efficient O(n) pattern matching" },
+    ]
+  },
+  {
+    name: "Array Techniques", icon: "\uD83D\uDCCA",
+    topics: [
+      { name: "Max / Min Finding", status: "covered", lesson: "L2, L3", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/selection_sort.py"] },
+      { name: "Sorted Check", status: "covered", lesson: "L2", lang: "Py, Go", depth: 2, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"] },
+      { name: "Two-pointer Technique", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "easy", files: ["arrays/remove_element.py"] },
+      { name: "In-place Element Removal", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "easy", files: ["arrays/remove_element.py"] },
+      { name: "Sliding Window", status: "not_covered", diff: "medium", rec: "Key pattern for subarray/substring problems" },
+      { name: "Kadane\u2019s Algorithm", status: "not_covered", diff: "medium", rec: "Max subarray sum in O(n)" },
+    ]
+  },
+  {
+    name: "Data Structures", icon: "\uD83E\uDDF1",
+    topics: [
+      { name: "Linked List", status: "not_covered", diff: "easy", rec: "Foundation \u2014 start here. Great in C too" },
+      { name: "Stack", status: "not_covered", diff: "easy", rec: "LIFO \u2014 used in parsing, DFS, undo" },
+      { name: "Queue", status: "not_covered", diff: "easy", rec: "FIFO \u2014 used in BFS, scheduling" },
+      { name: "Hash Table / Map", status: "not_covered", diff: "medium", rec: "Most used DS in practice \u2014 high priority" },
+      { name: "Binary Tree", status: "not_covered", diff: "medium", rec: "Core tree structure, learn traversals" },
+      { name: "Binary Search Tree", status: "not_covered", diff: "medium", requires: ["Binary Tree"], rec: "Sorted data structure with O(log n) ops" },
+      { name: "Heap / Priority Queue", status: "not_covered", diff: "medium", requires: ["Binary Tree"], rec: "Needed for heap sort and Dijkstra" },
+      { name: "Graph (adj list / matrix)", status: "not_covered", diff: "medium", rec: "Foundation for all graph algorithms" },
+      { name: "Trie", status: "not_covered", diff: "hard", requires: ["Binary Tree"], rec: "Prefix tree for string search" },
+    ]
+  },
+  {
+    name: "Dynamic Programming", icon: "\uD83E\uDDE9",
+    topics: [
+      { name: "Fibonacci (DP approach)", status: "not_covered", diff: "easy", rec: "Start here \u2014 simplest DP example" },
+      { name: "Knapsack Problem", status: "not_covered", diff: "medium", requires: ["Fibonacci (DP approach)"], rec: "Classic optimization problem" },
+      { name: "Longest Common Subsequence", status: "not_covered", diff: "medium", requires: ["Fibonacci (DP approach)"], rec: "2D DP on strings" },
+      { name: "Coin Change", status: "not_covered", diff: "medium", requires: ["Fibonacci (DP approach)"], rec: "Unbounded knapsack variant" },
+      { name: "Grid Path Counting", status: "not_covered", diff: "medium", requires: ["Fibonacci (DP approach)"], rec: "2D DP on grids" },
+    ]
+  },
+  {
+    name: "Graph Algorithms", icon: "\uD83D\uDD78\uFE0F",
+    topics: [
+      { name: "BFS (Breadth-First Search)", status: "not_covered", diff: "medium", requires: ["Graph (adj list / matrix)", "Queue"], rec: "Shortest path in unweighted graphs" },
+      { name: "DFS (Depth-First Search)", status: "not_covered", diff: "medium", requires: ["Graph (adj list / matrix)", "Stack"], rec: "Traversal, cycle detection, topological sort" },
+      { name: "Dijkstra\u2019s Shortest Path", status: "not_covered", diff: "hard", requires: ["Graph (adj list / matrix)", "Heap / Priority Queue"], rec: "Weighted graph shortest path" },
+      { name: "Topological Sort", status: "not_covered", diff: "medium", requires: ["DFS (Depth-First Search)"], rec: "Ordering for DAGs" },
+      { name: "Minimum Spanning Tree", status: "not_covered", diff: "hard", requires: ["Graph (adj list / matrix)"], rec: "Kruskal\u2019s or Prim\u2019s algorithm" },
+    ]
+  },
+  {
+    name: "Greedy Algorithms", icon: "\uD83C\uDFAF",
+    topics: [
+      { name: "Activity Selection", status: "not_covered", diff: "medium", rec: "Classic greedy interval problem" },
+      { name: "Huffman Coding", status: "not_covered", diff: "hard", requires: ["Binary Tree", "Heap / Priority Queue"], rec: "Greedy + trees for compression" },
+      { name: "Interval Scheduling", status: "not_covered", diff: "medium", rec: "Overlapping intervals pattern" },
+    ]
+  },
+  {
+    name: "Game Theory & AI", icon: "\uD83C\uDFAE",
+    topics: [
+      { name: "Minimax / Tic-tac-toe", status: "covered", lesson: "L6", lang: "Py", depth: 3, diff: "medium", files: ["game_theory/tic_tac_toe.py"] },
+      { name: "Alpha-beta Pruning", status: "not_covered", diff: "medium", rec: "Optimization of minimax search" },
+    ]
+  },
+];
+
+// --- Helpers ---
+const statusLabels = { covered: 'done', partial: 'wip', not_covered: 'todo' };
+const depthLabels = ['', 'brief', 'basic', 'solid', 'deep', 'mastery'];
+const diffOrder = { easy: 0, medium: 1, hard: 2 };
+let currentFilter = 'all';
+
+function allTopics() {
+  const list = [];
+  categories.forEach(cat => cat.topics.forEach(t => list.push({ ...t, category: cat.name, catIcon: cat.icon })));
+  return list;
+}
+
+function isCovered(name) {
+  const t = allTopics().find(x => x.name === name);
+  return t && (t.status === 'covered' || t.status === 'partial');
+}
+
+function prereqsMet(t) {
+  if (!t.requires || !t.requires.length) return true;
+  return t.requires.every(r => isCovered(r));
+}
+
+function renderDepth(d) {
+  const pct = (d / 5) * 100;
+  return `<span class="depth-label"><span class="depth-bar"><span class="depth-bar-fill" style="width:${pct}%"></span></span>${depthLabels[d]}</span>`;
+}
+
+function renderDiff(d) {
+  if (!d) return '';
+  return `<span class="diff-tag diff-${d}">${d}</span>`;
+}
+
+function progressColor(pct) {
+  if (pct >= 70) return 'var(--green)';
+  if (pct >= 30) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+// --- Learn Next ---
+function renderLearnNext() {
+  const candidates = allTopics()
+    .filter(t => t.status === 'not_covered' && prereqsMet(t))
+    .sort((a, b) => diffOrder[a.diff] - diffOrder[b.diff]);
+
+  const top = candidates.slice(0, 5);
+  const el = document.getElementById('learn-next');
+
+  let html = '<h2>> recommended_next</h2><div class="learn-next-grid">';
+  top.forEach(t => {
+    html += `<div class="next-card">
+      <div class="next-card-title">${t.name}</div>
+      <div class="next-card-meta">
+        ${renderDiff(t.diff)}
+        <span class="next-card-category">${t.category}</span>
+      </div>
+      ${t.rec ? `<div class="next-card-rec">${t.rec}</div>` : ''}
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// --- Filters ---
+function renderFilters() {
+  const el = document.getElementById('filters');
+  el.innerHTML = `
+    <span class="filters-label">filter:</span>
+    <button class="filter-btn active" data-f="all">all</button>
+    <button class="filter-btn" data-f="covered">done</button>
+    <button class="filter-btn" data-f="partial">partial</button>
+    <button class="filter-btn" data-f="not_covered">todo</button>
+  `;
+  el.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.f;
+      el.querySelectorAll('.filter-btn').forEach(b => { b.className = 'filter-btn'; });
+      const activeClass = { all: 'active', covered: 'active-green', partial: 'active-yellow', not_covered: 'active-red' };
+      btn.classList.add(activeClass[currentFilter]);
+      applyFilter();
+    });
+  });
+}
+
+function applyFilter() {
+  document.querySelectorAll('.topic').forEach(el => {
+    if (currentFilter === 'all') el.classList.remove('hidden');
+    else el.classList.toggle('hidden', !el.classList.contains(currentFilter));
+  });
+  document.querySelectorAll('.card').forEach(card => {
+    const visible = card.querySelectorAll('.topic:not(.hidden)').length;
+    card.classList.toggle('hidden', visible === 0);
+  });
+}
+
+// --- Main Render ---
+function render() {
+  let totalAll = 0, coveredAll = 0, partialAll = 0, notAll = 0;
+  const app = document.getElementById('app');
+  let html = '';
+
+  categories.forEach((cat, ci) => {
+    const total = cat.topics.length;
+    const covered = cat.topics.filter(t => t.status === 'covered').length;
+    const partial = cat.topics.filter(t => t.status === 'partial').length;
+    const not_covered = total - covered - partial;
+    const pct = Math.round(((covered + partial * 0.5) / total) * 100);
+
+    totalAll += total;
+    coveredAll += covered;
+    partialAll += partial;
+    notAll += not_covered;
+
+    let topicsHtml = '';
+    cat.topics.forEach(t => {
+      topicsHtml += `<div class="topic ${t.status}">
+        <div class="topic-main">
+          <span class="status-tag ${t.status}">${statusLabels[t.status]}</span>
+          <span class="topic-name">${t.name}</span>`;
+      if (t.lesson || t.lang) {
+        topicsHtml += '<span class="badges">';
+        if (t.lesson) topicsHtml += `<span class="badge badge-lesson">${t.lesson}</span>`;
+        if (t.lang) topicsHtml += `<span class="badge badge-lang">${t.lang}</span>`;
+        topicsHtml += '</span>';
+      }
+      topicsHtml += renderDiff(t.diff);
+      if (t.depth) topicsHtml += renderDepth(t.depth);
+      if (t.requires && t.requires.length) {
+        const met = prereqsMet(t);
+        topicsHtml += `<span class="prereq">${met ? '\u2705' : '\uD83D\uDD12'} <span>req:</span> ${t.requires.join(', ')}</span>`;
+      }
+      topicsHtml += '<span class="spacer"></span>';
+      if (t.rec) topicsHtml += `<span class="rec">${t.rec}</span>`;
+      topicsHtml += '</div>';
+      if (t.files && t.files.length) {
+        topicsHtml += '<div class="topic-files">';
+        t.files.forEach(f => {
+          const name = f.split('/').pop();
+          topicsHtml += `<a class="file-link" href="${GITHUB}${f}" target="_blank" title="${f}">${name}</a>`;
+        });
+        topicsHtml += '</div>';
+      }
+      topicsHtml += '</div>';
+    });
+
+    html += `<div class="card" id="cat-${ci}">
+      <div class="card-header" onclick="toggle(${ci})">
+        <span class="card-icon">${cat.icon}</span>
+        <span class="card-title">${cat.name}</span>
+        <span class="card-count">[${covered + partial}/${total}]</span>
+        <div class="card-bar"><div class="card-bar-fill" style="width:${pct}%;background:${progressColor(pct)}"></div></div>
+        <span class="card-pct" style="color:${progressColor(pct)}">${pct}%</span>
+        <span class="chevron">\u25BC</span>
+      </div>
+      <div class="card-body">${topicsHtml}</div>
+    </div>`;
+  });
+
+  app.innerHTML = html;
+
+  const overallPct = Math.round(((coveredAll + partialAll * 0.5) / totalAll) * 100);
+  document.getElementById('s-total').textContent = totalAll;
+  document.getElementById('s-covered').textContent = coveredAll;
+  document.getElementById('s-partial').textContent = partialAll;
+  document.getElementById('s-not').textContent = notAll;
+  document.getElementById('ring-pct').textContent = overallPct + '%';
+
+  const circ = 2 * Math.PI * 56;
+  document.getElementById('ring').style.strokeDashoffset = circ * (1 - overallPct / 100);
+}
+
+function toggle(i) {
+  document.getElementById('cat-' + i).classList.toggle('collapsed');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  render();
+  renderLearnNext();
+  renderFilters();
+});
+</script>
+</body>
+</html>
