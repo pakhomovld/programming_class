@@ -21,33 +21,36 @@ char* dup_string(char* a, int b);
 char* appendl_char(char* a, char b);
 char* appendr_char(char* a, char b);
 char* del_symbol(char* a, int b);
+char* int_to_char(int b);
 
 int main(){
-    for (int i = 0; i < 10; i++){
-        printf("Hello world\n");
-    }
+    // for (int i = 0; i < 10; i++){
+    //     printf("Hello world\n");
+    // }
 
-    printf("%d\n",factorial(5));
-    printf("%d\n",len("hello world!"));
+    // printf("%d\n",factorial(5));
+    // printf("%d\n",len("hello world!"));
 
-    char* a = "abc";
-    char* b = "def";
+    // char* a = "abc";
+    // char* b = "def";
 
-    printf("%s\n",concat(a,b));
+    // printf("%s\n",concat(a,b));
 
-    printf("%d\n",is_substring("abc", "qwabc42"));
-    printf("%d\n",is_substring("abc", "abcdef"));
-    printf("%d\n",is_palindrome("abcba"));
-    printf("%d\n",is_lower_case("abcba"));
-    printf("%d\n",is_identifier("a123"));
+    // printf("%d\n",is_substring("abc", "qwabc42"));
+    // printf("%d\n",is_substring("abc", "abcdef"));
+    // printf("%d\n",is_palindrome("abcba"));
+    // printf("%d\n",is_lower_case("abcba"));
+    // printf("%d\n",is_identifier("a123"));
 
-    printf("%s\n",upcase("abcD12"));
-    printf("%s\n",swap_case("abcD12"));
-    printf("%s\n",reverse("abc"));
-    printf("%s\n",dup_string("abc", 3));
-    printf("%s\n",appendl_char("abc", 'd'));
-    printf("%s\n",appendr_char("abc", 'd'));
-    printf("%s\n",del_symbol("abc", 2));
+    // printf("%s\n",upcase("abcD12"));
+    // printf("%s\n",swap_case("abcD12"));
+    // printf("%s\n",reverse("abc"));
+    // printf("%s\n",dup_string("abc", 3));
+    // printf("%s\n",appendl_char("abc", 'd'));
+    // printf("%s\n",appendr_char("abc", 'd'));
+    // printf("%s\n",del_symbol("abc", 2));
+
+    printf("%s\n",int_to_char(314));
 
     return 0;
 }
@@ -293,3 +296,34 @@ char* del_symbol(char* a, int b){
     result[len_a - 1] = '\0';
     return result;
 }
+
+// 314
+
+// 314 % 10 = 4
+// 314 /= 31
+
+// 31 % 10 = 1
+// 31 /= 3 
+
+// 3 % 10 = 3
+// 3 /= 0
+
+char* int_to_char(int n){
+    char* result = malloc(1);
+    result[0] = '\0';
+
+    while (n != 0){
+        char* ptr = result;
+        result = appendl_char(result, n % 10 + 48);
+        free(ptr);
+
+        n /= 10;
+    }
+
+    return result;
+}
+
+
+
+// clang -Wall -Wunreachable-code -g program.c && ./a.out
+// leaks --atExit -- ./a.out
