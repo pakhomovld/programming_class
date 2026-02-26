@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorting Visualizer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%230a0a0a'/><text x='10' y='72' font-family='monospace' font-size='65' font-weight='bold' fill='%2300ff41'>%3E_</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface-hover: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #d0d0d0;
+    --text-muted: #aaa;
+    --text-dim: #888;
+    --green: #00ff41;
+    --green-dim: #00cc33;
+    --green-bg: rgba(0,255,65,0.06);
+    --green-border: rgba(0,255,65,0.2);
+    --yellow: #ffcc00;
+    --red: #ff3333;
+    --cyan: #00ccff;
+    --purple: #cc66ff;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header { margin-bottom: 20px; }
+  header h1 {
+    font-size: 22px; font-weight: 700;
+    color: var(--green); letter-spacing: 2px; text-transform: uppercase;
+  }
+  .back-link {
+    font-size: 11px; color: var(--text-dim); margin-bottom: 6px; display: block;
+    letter-spacing: 1px;
+  }
+  .back-link:hover { color: var(--cyan); text-decoration: none; }
+  header p { color: var(--text-dim); font-size: 11px; letter-spacing: 1px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 8px 16px; border: 1px solid var(--border); border-bottom: none;
+    background: var(--surface); color: var(--text-dim);
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface-hover); }
+  .tab.active { background: var(--bg); color: var(--green); border-bottom: 1px solid var(--bg); margin-bottom: -1px; }
+
+  /* Canvas area */
+  .canvas-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 16px; margin-bottom: 16px; position: relative;
+  }
+  canvas { display: block; width: 100%; }
+
+  /* Controls row */
+  .controls {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 6px 14px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--green); color: var(--green); }
+  .btn:active { background: var(--green); color: #000; }
+  .btn.playing { background: var(--green); color: #000; border-color: var(--green); }
+  .btn:disabled { opacity: 0.3; cursor: default; }
+  .btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+  .speed-group, .size-group {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim);
+  }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    background: var(--border); height: 4px; outline: none; width: 100px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px; background: var(--green); cursor: pointer;
+    border: none;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--green); cursor: pointer;
+    border: none; border-radius: 0;
+  }
+
+  /* Array config */
+  .config {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .config-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .type-btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    padding: 4px 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim);
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .type-btn:hover { border-color: var(--text-muted); color: var(--text); }
+  .type-btn.active { background: var(--green); border-color: var(--green); color: #000; }
+
+  /* Info panel */
+  .info {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 12px 16px; font-size: 11px;
+  }
+  .info-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .info-stat { color: var(--text-dim); }
+  .info-stat span { color: var(--green); font-weight: 700; }
+  .info-desc { color: var(--cyan); margin-top: 6px; min-height: 1.4em; }
+
+  /* Complexity info */
+  .algo-info {
+    font-size: 10px; color: var(--text-dim); margin-bottom: 16px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .algo-info span { color: var(--text-muted); }
+
+  footer {
+    text-align: center; padding: 16px 0; color: var(--text-dim); font-size: 10px;
+    border-top: 1px solid var(--border); margin-top: 24px; letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px 8px; }
+    .tab { padding: 6px 10px; font-size: 10px; }
+    .controls { gap: 4px; }
+    input[type="range"] { width: 70px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-link" href="/">&lt; back to dsa map</a>
+  <h1>&gt; Sorting Visualizer_</h1>
+  <p>// step-by-step sorting algorithm animations</p>
+</header>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-algo="bubble">Bubble Sort</div>
+  <div class="tab" data-algo="gnome">Gnome Sort</div>
+  <div class="tab" data-algo="selection">Selection Sort</div>
+  <div class="tab" data-algo="merge">Merge Sort</div>
+  <div class="tab" data-algo="quick">Quick Sort</div>
+</div>
+
+<div class="algo-info" id="algo-info"></div>
+
+<div class="config">
+  <span class="config-label">size:</span>
+  <div class="size-group">
+    <input type="range" id="size-slider" min="10" max="100" value="30">
+    <span id="size-val">30</span>
+  </div>
+  <span class="config-label" style="margin-left:12px">type:</span>
+  <button class="type-btn active" data-type="random">Random</button>
+  <button class="type-btn" data-type="sorted">Sorted</button>
+  <button class="type-btn" data-type="reversed">Reversed</button>
+  <button class="type-btn" data-type="nearly">Nearly Sorted</button>
+</div>
+
+<div class="controls">
+  <button class="btn" id="btn-play">Play</button>
+  <button class="btn" id="btn-step">Step</button>
+  <button class="btn" id="btn-reset">Reset</button>
+  <div class="speed-group">
+    <span>speed:</span>
+    <input type="range" id="speed-slider" min="1" max="100" value="50">
+    <span id="speed-val">50</span>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas" height="350"></canvas>
+</div>
+
+<div class="info" id="info">
+  <div class="info-row">
+    <div class="info-stat">comparisons: <span id="stat-cmp">0</span></div>
+    <div class="info-stat">swaps: <span id="stat-swp">0</span></div>
+    <div class="info-stat">step: <span id="stat-step">0</span> / <span id="stat-total">0</span></div>
+  </div>
+  <div class="info-desc" id="info-desc">Press Play or Step to begin.</div>
+</div>
+
+<footer>
+  <div>sorting visualizer // programming_class // feb 2026</div>
+</footer>
+
+<script>
+// ========== CONFIG ==========
+const algoMeta = {
+  bubble:    { name: 'Bubble Sort',    best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)', stable: 'Yes' },
+  gnome:     { name: 'Gnome Sort',     best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)', stable: 'Yes' },
+  selection: { name: 'Selection Sort', best: 'O(n²)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)', stable: 'No' },
+  merge:     { name: 'Merge Sort',     best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)', stable: 'Yes' },
+  quick:     { name: 'Quick Sort',     best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n²)', space: 'O(log n)', stable: 'No' },
+};
+
+const COLORS = {
+  default:   '#00cc33',
+  comparing: '#00ccff',
+  swapping:  '#ff3333',
+  sorted:    '#00ff41',
+  pivot:     '#ffcc00',
+};
+
+// ========== STATE ==========
+let currentAlgo = 'bubble';
+let arrayType = 'random';
+let arraySize = 30;
+let arr = [];
+let operations = [];
+let opIndex = 0;
+let playing = false;
+let playTimer = null;
+let highlights = {};   // index -> color
+let sortedSet = new Set();
+let comparisons = 0;
+let swaps = 0;
+
+// ========== DOM ==========
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const btnPlay = document.getElementById('btn-play');
+const btnStep = document.getElementById('btn-step');
+const btnReset = document.getElementById('btn-reset');
+const speedSlider = document.getElementById('speed-slider');
+const speedVal = document.getElementById('speed-val');
+const sizeSlider = document.getElementById('size-slider');
+const sizeVal = document.getElementById('size-val');
+const statCmp = document.getElementById('stat-cmp');
+const statSwp = document.getElementById('stat-swp');
+const statStep = document.getElementById('stat-step');
+const statTotal = document.getElementById('stat-total');
+const infoDesc = document.getElementById('info-desc');
+const algoInfoEl = document.getElementById('algo-info');
+
+// ========== ARRAY GENERATION ==========
+function generateArray(size, type) {
+  const a = [];
+  for (let i = 1; i <= size; i++) a.push(i);
+  if (type === 'sorted') return a;
+  if (type === 'reversed') return a.reverse();
+  if (type === 'nearly') {
+    // swap ~10% of adjacent pairs
+    const swapCount = Math.max(1, Math.floor(size * 0.1));
+    for (let s = 0; s < swapCount; s++) {
+      const i = Math.floor(Math.random() * (size - 1));
+      [a[i], a[i + 1]] = [a[i + 1], a[i]];
+    }
+    return a;
+  }
+  // random: Fisher-Yates
+  for (let i = size - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ========== ALGORITHM GENERATORS ==========
+function* bubbleSort(a) {
+  const n = a.length;
+  for (let i = 0; i < n - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - 1 - i; j++) {
+      yield { type: 'compare', indices: [j, j + 1], desc: `Comparing arr[${j}]=${a[j]} with arr[${j+1}]=${a[j+1]}` };
+      if (a[j] > a[j + 1]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        swapped = true;
+        yield { type: 'swap', indices: [j, j + 1], desc: `Swapping arr[${j}]=${a[j+1]} and arr[${j+1}]=${a[j]}` };
+      }
+    }
+    yield { type: 'sorted', indices: [n - 1 - i], desc: `arr[${n-1-i}]=${a[n-1-i]} is in final position` };
+    if (!swapped) {
+      for (let k = 0; k <= n - 2 - i; k++) yield { type: 'sorted', indices: [k], desc: `arr[${k}]=${a[k]} is in final position` };
+      break;
+    }
+  }
+  yield { type: 'sorted', indices: [0], desc: `arr[0]=${a[0]} is in final position` };
+}
+
+function* gnomeSort(a) {
+  let i = 0;
+  const n = a.length;
+  while (i < n) {
+    if (i === 0 || a[i] >= a[i - 1]) {
+      if (i > 0) yield { type: 'compare', indices: [i - 1, i], desc: `Comparing arr[${i-1}]=${a[i-1]} with arr[${i}]=${a[i]} — in order, move right` };
+      i++;
+    } else {
+      yield { type: 'compare', indices: [i - 1, i], desc: `Comparing arr[${i-1}]=${a[i-1]} with arr[${i}]=${a[i]} — out of order` };
+      [a[i], a[i - 1]] = [a[i - 1], a[i]];
+      yield { type: 'swap', indices: [i - 1, i], desc: `Swapping arr[${i-1}]=${a[i]} and arr[${i}]=${a[i-1]}` };
+      i--;
+    }
+  }
+  for (let k = 0; k < n; k++) yield { type: 'sorted', indices: [k], desc: `arr[${k}]=${a[k]} is in final position` };
+}
+
+function* selectionSort(a) {
+  const n = a.length;
+  for (let i = 0; i < n - 1; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      yield { type: 'compare', indices: [minIdx, j], desc: `Comparing min=arr[${minIdx}]=${a[minIdx]} with arr[${j}]=${a[j]}` };
+      if (a[j] < a[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+      yield { type: 'swap', indices: [i, minIdx], desc: `Swapping arr[${i}]=${a[minIdx]} and arr[${minIdx}]=${a[i]}` };
+    }
+    yield { type: 'sorted', indices: [i], desc: `arr[${i}]=${a[i]} is in final position` };
+  }
+  yield { type: 'sorted', indices: [n - 1], desc: `arr[${n-1}]=${a[n-1]} is in final position` };
+}
+
+function* mergeSort(a, lo = 0, hi = a.length - 1) {
+  if (lo >= hi) {
+    if (lo === hi) yield { type: 'sorted', indices: [lo], desc: `arr[${lo}]=${a[lo]} — single element, trivially sorted` };
+    return;
+  }
+  const mid = Math.floor((lo + hi) / 2);
+  yield* mergeSort(a, lo, mid);
+  yield* mergeSort(a, mid + 1, hi);
+  yield* merge(a, lo, mid, hi);
+}
+
+function* merge(a, lo, mid, hi) {
+  const left = a.slice(lo, mid + 1);
+  const right = a.slice(mid + 1, hi + 1);
+  let i = 0, j = 0, k = lo;
+  while (i < left.length && j < right.length) {
+    yield { type: 'compare', indices: [lo + i, mid + 1 + j], desc: `Merging: comparing ${left[i]} (left) with ${right[j]} (right)` };
+    if (left[i] <= right[j]) {
+      a[k] = left[i];
+      yield { type: 'overwrite', indices: [k], desc: `Placing ${left[i]} at arr[${k}]` };
+      i++;
+    } else {
+      a[k] = right[j];
+      yield { type: 'overwrite', indices: [k], desc: `Placing ${right[j]} at arr[${k}]` };
+      j++;
+    }
+    k++;
+  }
+  while (i < left.length) {
+    a[k] = left[i];
+    yield { type: 'overwrite', indices: [k], desc: `Placing remaining ${left[i]} at arr[${k}]` };
+    i++; k++;
+  }
+  while (j < right.length) {
+    a[k] = right[j];
+    yield { type: 'overwrite', indices: [k], desc: `Placing remaining ${right[j]} at arr[${k}]` };
+    j++; k++;
+  }
+  if (lo === 0 && hi === a.length - 1) {
+    for (let s = lo; s <= hi; s++) yield { type: 'sorted', indices: [s], desc: `arr[${s}]=${a[s]} is in final position` };
+  }
+}
+
+function* quickSort(a, lo = 0, hi = a.length - 1) {
+  if (lo >= hi) {
+    if (lo === hi && lo >= 0 && lo < a.length) yield { type: 'sorted', indices: [lo], desc: `arr[${lo}]=${a[lo]} is in final position` };
+    return;
+  }
+  // Lomuto partition
+  const pivotVal = a[hi];
+  yield { type: 'pivot', indices: [hi], desc: `Pivot selected: arr[${hi}]=${pivotVal}` };
+  let i = lo;
+  for (let j = lo; j < hi; j++) {
+    yield { type: 'compare', indices: [j, hi], desc: `Comparing arr[${j}]=${a[j]} with pivot=${pivotVal}` };
+    if (a[j] < pivotVal) {
+      if (i !== j) {
+        [a[i], a[j]] = [a[j], a[i]];
+        yield { type: 'swap', indices: [i, j], desc: `Swapping arr[${i}]=${a[j]} and arr[${j}]=${a[i]}` };
+      }
+      i++;
+    }
+  }
+  if (i !== hi) {
+    [a[i], a[hi]] = [a[hi], a[i]];
+    yield { type: 'swap', indices: [i, hi], desc: `Placing pivot ${pivotVal} at arr[${i}]` };
+  }
+  yield { type: 'sorted', indices: [i], desc: `Pivot arr[${i}]=${a[i]} is in final position` };
+
+  yield* quickSort(a, lo, i - 1);
+  yield* quickSort(a, i + 1, hi);
+}
+
+const algoFns = { bubble: bubbleSort, gnome: gnomeSort, selection: selectionSort, merge: mergeSort, quick: quickSort };
+
+// ========== RECORD OPERATIONS ==========
+function recordOps() {
+  const copy = [...arr];
+  const gen = algoFns[currentAlgo](copy);
+  const ops = [];
+  for (const op of gen) {
+    ops.push({ ...op, snapshot: [...copy] });
+  }
+  return ops;
+}
+
+// ========== PLAYBACK ==========
+function reset() {
+  stopPlaying();
+  arr = generateArray(arraySize, arrayType);
+  operations = recordOps();
+  opIndex = 0;
+  highlights = {};
+  sortedSet = new Set();
+  comparisons = 0;
+  swaps = 0;
+  updateStats();
+  infoDesc.textContent = 'Press Play or Step to begin.';
+  draw();
+}
+
+function stepForward() {
+  if (opIndex >= operations.length) {
+    stopPlaying();
+    return false;
+  }
+  const op = operations[opIndex];
+  arr = [...op.snapshot];
+  highlights = {};
+
+  if (op.type === 'compare') {
+    comparisons++;
+    op.indices.forEach(i => highlights[i] = COLORS.comparing);
+  } else if (op.type === 'swap') {
+    swaps++;
+    op.indices.forEach(i => highlights[i] = COLORS.swapping);
+  } else if (op.type === 'overwrite') {
+    swaps++;
+    op.indices.forEach(i => highlights[i] = COLORS.swapping);
+  } else if (op.type === 'sorted') {
+    op.indices.forEach(i => sortedSet.add(i));
+  } else if (op.type === 'pivot') {
+    op.indices.forEach(i => highlights[i] = COLORS.pivot);
+  }
+
+  infoDesc.textContent = op.desc;
+  opIndex++;
+  updateStats();
+  draw();
+  return opIndex < operations.length;
+}
+
+function getDelay() {
+  const s = parseInt(speedSlider.value);
+  // Map 1..100 to 500ms..5ms (logarithmic feel)
+  return Math.round(500 * Math.pow(5 / 500, (s - 1) / 99));
+}
+
+function startPlaying() {
+  if (opIndex >= operations.length) reset();
+  playing = true;
+  btnPlay.textContent = 'Pause';
+  btnPlay.classList.add('playing');
+  scheduleNext();
+}
+
+function scheduleNext() {
+  if (!playing) return;
+  playTimer = setTimeout(() => {
+    if (!playing) return;
+    const more = stepForward();
+    if (more && playing) scheduleNext();
+    else stopPlaying();
+  }, getDelay());
+}
+
+function stopPlaying() {
+  playing = false;
+  clearTimeout(playTimer);
+  btnPlay.textContent = 'Play';
+  btnPlay.classList.remove('playing');
+}
+
+function updateStats() {
+  statCmp.textContent = comparisons;
+  statSwp.textContent = swaps;
+  statStep.textContent = opIndex;
+  statTotal.textContent = operations.length;
+}
+
+// ========== CANVAS DRAWING ==========
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = rect.width - 32; // padding
+  const h = 350;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(0, 0, w, h);
+
+  const n = arr.length;
+  const maxVal = Math.max(...arr);
+  const gap = Math.max(1, Math.floor(w / n * 0.15));
+  const barW = Math.max(1, (w - gap * (n + 1)) / n);
+  const maxBarH = h - 20;
+
+  for (let i = 0; i < n; i++) {
+    const barH = (arr[i] / maxVal) * maxBarH;
+    const x = gap + i * (barW + gap);
+    const y = h - barH - 10;
+
+    let color = COLORS.default;
+    if (sortedSet.has(i)) color = COLORS.sorted;
+    if (highlights[i]) color = highlights[i];
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, barW, barH);
+  }
+}
+
+// ========== ALGO INFO ==========
+function updateAlgoInfo() {
+  const m = algoMeta[currentAlgo];
+  algoInfoEl.innerHTML = `
+    <span>best: <span>${m.best}</span></span>
+    <span>avg: <span>${m.avg}</span></span>
+    <span>worst: <span>${m.worst}</span></span>
+    <span>space: <span>${m.space}</span></span>
+    <span>stable: <span>${m.stable}</span></span>
+  `;
+}
+
+// ========== EVENT HANDLERS ==========
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentAlgo = tab.dataset.algo;
+    updateAlgoInfo();
+    reset();
+  });
+});
+
+document.querySelectorAll('.type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    arrayType = btn.dataset.type;
+    reset();
+  });
+});
+
+btnPlay.addEventListener('click', () => {
+  if (playing) stopPlaying();
+  else startPlaying();
+});
+
+btnStep.addEventListener('click', () => {
+  if (playing) stopPlaying();
+  if (opIndex >= operations.length && opIndex > 0) return;
+  stepForward();
+});
+
+btnReset.addEventListener('click', reset);
+
+speedSlider.addEventListener('input', () => {
+  speedVal.textContent = speedSlider.value;
+});
+
+sizeSlider.addEventListener('input', () => {
+  arraySize = parseInt(sizeSlider.value);
+  sizeVal.textContent = arraySize;
+  reset();
+});
+
+window.addEventListener('resize', draw);
+
+// ========== INIT ==========
+updateAlgoInfo();
+reset();
+</script>
+</body>
+</html>

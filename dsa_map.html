@@ -13,8 +13,8 @@
     --surface-hover: #1a1a1a;
     --border: #2a2a2a;
     --text: #d0d0d0;
-    --text-muted: #666;
-    --text-dim: #444;
+    --text-muted: #aaa;
+    --text-dim: #888;
     --green: #00ff41;
     --green-dim: #00cc33;
     --green-bg: rgba(0,255,65,0.06);
@@ -317,11 +317,11 @@ const categories = [
   {
     name: "Sorting Algorithms", icon: "\u2195\uFE0F",
     topics: [
-      { name: "Bubble Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"] },
-      { name: "Gnome Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 2, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"] },
-      { name: "Selection Sort", status: "covered", lesson: "L3", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/selection_sort.py", "sorting/selection_sort.go"] },
-      { name: "Merge Sort", status: "covered", lesson: "L4", lang: "Go", depth: 3, diff: "medium", files: ["sorting/merge_sort.go"] },
-      { name: "Quick Sort", status: "covered", lesson: "L4", lang: "Py", depth: 3, diff: "medium", files: ["sorting/quick_sort.py"] },
+      { name: "Bubble Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"], visualize: "/sorting" },
+      { name: "Gnome Sort", status: "covered", lesson: "L2", lang: "Py, Go", depth: 2, diff: "easy", files: ["sorting/bubble_sort.py", "sorting/bubble_sort.go"], visualize: "/sorting" },
+      { name: "Selection Sort", status: "covered", lesson: "L3", lang: "Py, Go", depth: 3, diff: "easy", files: ["sorting/selection_sort.py", "sorting/selection_sort.go"], visualize: "/sorting" },
+      { name: "Merge Sort", status: "covered", lesson: "L4", lang: "Go", depth: 3, diff: "medium", files: ["sorting/merge_sort.go"], visualize: "/sorting" },
+      { name: "Quick Sort", status: "covered", lesson: "L4", lang: "Py", depth: 3, diff: "medium", files: ["sorting/quick_sort.py"], visualize: "/sorting" },
       { name: "Insertion Sort", status: "not_covered", diff: "easy", rec: "Natural next step \u2014 simple O(n\u00B2) sort, great for nearly-sorted data" },
       { name: "Heap Sort", status: "not_covered", diff: "medium", requires: ["Heap / Priority Queue"], rec: "Learn after Heaps data structure" },
       { name: "Counting / Radix Sort", status: "not_covered", diff: "medium", rec: "Non-comparison O(n) sorts for bounded integers" },
@@ -556,6 +556,9 @@ function render() {
           const name = f.split('/').pop();
           topicsHtml += `<a class="file-link" href="${GITHUB}${f}" target="_blank" title="${f}">${name}</a>`;
         });
+        if (t.visualize) {
+          topicsHtml += `<a class="file-link" href="${t.visualize}" style="color:var(--green);background:rgba(0,255,65,0.06);border-color:rgba(0,255,65,0.15);" title="Visualize">&#9654; visualize</a>`;
+        }
         topicsHtml += '</div>';
       }
       topicsHtml += '</div>';
