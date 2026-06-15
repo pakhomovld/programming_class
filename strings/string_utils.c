@@ -1,4 +1,6 @@
+#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -22,6 +24,16 @@ char* appendl_char(char* a, char b);
 char* appendr_char(char* a, char b);
 char* del_symbol(char* a, int b);
 char* int_to_char(int b);
+char* title_case(char* s);
+char* pad_left(char* s, int total_width, char pad);
+char* pad_left_w_appendl(char* s, int total_width, char pad);
+char* pad_right(char* s, int total_width, char pad);
+char* pad_right_w_appendr(char* s, int total_width, char pad);
+char* center(char* s, int total_width, char pad);
+char* center_w_append_concat(char* s, int total_width, char pad);
+char* comma_separated(int numbers[], int count);
+char* array_to_string(int numbers[], int count, char* prefix, char* suffix);
+char* join_strings(char* strings[], int count, char* separator);
 
 int main(){
     // for (int i = 0; i < 10; i++){
@@ -51,6 +63,20 @@ int main(){
     // printf("%s\n",del_symbol("abc", 2));
 
     printf("%s\n",int_to_char(314));
+    printf("%s\n",title_case("the c programming language"));
+    printf("%s\n",pad_left("hello", 10, '-'));
+    printf("%s\n",pad_left_w_appendl("hello", 10, '-'));
+    printf("%s\n",pad_right("abc", 8, '.'));
+    printf("%s\n",pad_right_w_appendr("abc", 8, '.'));
+    printf("%s\n",center("Hi", 9, '='));
+    printf("%s\n",center_w_append_concat("Hi", 9, '='));
+
+    int a[] = {1, 100, 45, 8};
+    printf("%s\n",comma_separated(a, 4));
+    printf("%s\n",array_to_string(a, 4, "[", "]"));
+
+    char* words[] = {"apple", "banana", "kiwi"};
+    printf("%s\n",join_strings(words, 3, ", "));
 
     return 0;
 }
@@ -102,14 +128,6 @@ char* concat(char* a, char* b){
 }
 
 
-// abc
-// 012
-
-// de
-// 01
-
-// abcde
-// 01234
 
 
 // 1. функция is_substring("abc","qwabc42") возвращает 1, если первая строка является подстрокой второго аргумента и 0, если не является.
@@ -327,3 +345,230 @@ char* int_to_char(int n){
 
 // clang -Wall -Wunreachable-code -g program.c && ./a.out
 // leaks --atExit -- ./a.out
+
+
+
+// 1. title_case(char* s) -> char*
+// "the c programming language" -> "The C Programming Language"
+
+char* title_case(char* s){
+    int len_s = len(s);
+    char* result = malloc(len_s + 1);
+    int new_word = 1;
+
+    for (int i = 0; i <= len_s; i++){
+        if (isspace(s[i])) {
+            result[i] = s[i];
+            new_word = 1;
+        } else if (new_word) {
+            result[i] = toupper(s[i]);
+            new_word = 0;
+        } else {
+            result[i] = tolower(s[i]);
+        }
+    }
+    return result;
+}
+
+// 2.   pad_left(char* s, int total_width, char pad) -> char*
+//      pad_left("42", 6, '0') -> "000042"
+//      pad_left("hello", 10, '-') -> "-----hello"
+
+char* pad_left(char* s, int total_width, char pad){
+    char* result = malloc(total_width + 1);
+    int pad_len = total_width - len(s);
+
+    for (int i = 0; i < pad_len; i++){
+        result[i] = pad;
+    }
+
+    for (int i = pad_len; i < total_width; i++){
+        result[i] = s[i - pad_len];
+    }
+
+    result[total_width] = '\0';
+    return result;
+}
+
+char* pad_left_w_appendl(char* s, int total_width, char pad) {
+    char* result = malloc(1);
+    result[0] = '\0';
+    int pad_len = total_width - len(s);
+
+    for (int i = 0; i < pad_len; i++){
+        char* ptr = result;
+        result = appendl_char(result, pad);
+        free(ptr);
+    }
+
+    char* ptr = result;
+    result = concat(result, s);
+    free(ptr);
+
+    return result;
+}
+
+
+// 3. pad_right(char* s, int total_width, char pad) -> char*
+// pad_right("abc", 8, '.') -> "abc....."
+
+char* pad_right(char* s, int total_width, char pad){
+    char* result = malloc(total_width + 1);
+    int len_s = len(s);
+
+    for (int i = 0; i < len_s; i++){
+        result[i] = s[i];
+    }
+
+    for (int i = len_s; i < total_width; i++){
+        result[i] = pad;
+    }
+
+    result[total_width] = '\0';
+    return result;
+
+}
+
+char* pad_right_w_appendr(char* s, int total_width, char pad){
+    char* result = malloc(1);
+    result[0] = '\0';
+    int pad_len = total_width - len(s);
+
+    for (int i = 0; i < pad_len; i++){
+        char* ptr = result;
+        result = appendr_char(result, pad);
+        free(ptr);
+    }
+
+    result = concat(s, result);
+
+    return result;
+}
+
+
+// 4. center(char* s, int total_width, char pad) -> char*
+// center("Hi", 9, '=') -> "===Hi===="
+
+char* center(char* s, int total_width, char pad){
+    char* result = malloc(total_width + 1);
+    int first_pad_len = (total_width - len(s)) / 2;
+    int len_s_w_pad = len(s) + first_pad_len;
+
+    for (int i = 0; i < first_pad_len; i++){
+        result[i] = pad;
+    }
+
+    for (int i = first_pad_len; i < len_s_w_pad; i++){
+        result[i] = s[i - first_pad_len];
+    }
+
+    for (int i = len_s_w_pad; i < total_width; i++){
+        result[i] = pad;
+    }
+
+    result[total_width] = '\0';
+    return result;
+}
+
+char* center_w_append_concat(char* s, int total_width, char pad){
+    char* result = malloc(1);
+    result[0] = '\0';
+    int len_s = len(s);
+    int lpad_len = (total_width - len_s) / 2;
+
+    for (int i = 0; i < lpad_len; i++){
+        char* ptr = result;
+        result = appendl_char(result, pad);
+        free(ptr);
+    }
+
+    result = concat(result, s);
+
+    for (int i = lpad_len + len_s; i < total_width; i++){
+        char* ptr = result;
+        result = appendr_char(result, pad);
+        free(ptr);
+    }
+
+    return result;
+}
+
+
+// 5. comma_separated(int numbers[], int count) -> char*
+// int a[] = {1, 100, 45, 8}; -> "1, 100, 45, 8"
+
+char* comma_separated(int numbers[], int count){
+    char* result = malloc(1);
+    result[0] = '\0';
+
+    for (int i = 0; i < count; i++){
+        char* ptr = result;
+        char* ptr2 = int_to_char(numbers[i]);
+        result = concat(result, ptr2);
+        free(ptr);
+        free(ptr2);
+
+        if (i != count - 1){
+        char* ptr = result;
+        result = concat(result, ", ");
+        free(ptr);
+        }
+    }
+    return result;
+}
+
+
+// 6. array_to_string(int numbers[], int count, char* prefix, char* suffix) -> char*
+// array_to_string(a, 4, "[", "]") -> "[1,100,45,8]"
+
+char* array_to_string(int numbers[], int count, char* prefix, char* suffix){
+    char* result = malloc(1);
+    result[0] = '\0';
+
+    char* ptr_start = result;
+    result = concat(result, prefix);
+    free(ptr_start);
+
+    for (int i = 0; i < count; i++){
+        char* ptr = result;
+        char* ptr2 = int_to_char(numbers[i]);
+        result = concat(result, ptr2);
+        free(ptr);
+        free(ptr2);
+
+        if (i != count - 1){
+        char* ptr = result;
+        result = concat(result, ",");
+        free(ptr);
+        }
+    }
+
+    char* ptr_end = result;
+    result = concat(result, suffix);
+    free(ptr_end);
+
+    return result;
+}
+
+
+// 7. join_strings(char* strings[], int count, char* separator) -> char*
+// const char *words[] = {"apple", "banana", "kiwi"}; -> "apple, banana, kiwi" (or with different separator)
+
+char* join_strings(char* strings[], int count, char* separator){
+    char* result = malloc(1);
+    result[0] = '\0';
+
+    for (int i = 0; i < count; i++){
+        char* ptr = result;
+        result = concat(result, strings[i]);
+        free(ptr);
+
+        if (i != count - 1){
+        char* ptr = result;
+        result = concat(result, separator);
+        free(ptr);
+        }
+    }
+
+    return result;
+}

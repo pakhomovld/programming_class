@@ -1,1 +1,13 @@
 CLAUDE.md
+
+# Compiled binaries
+a.out
+*.o
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
