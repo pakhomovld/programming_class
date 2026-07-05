@@ -2,27 +2,56 @@
 #include <stdlib.h>
 #include <time.h>
 
-int y = 10;
-int x = 10;
+int y = 15;
+int x = 15;
 
-void check_self_eat(int snake_len, int tail_y[], int tail_x[]){
+int size_y;
+int size_x;
+
+int apple_y;
+int apple_x;
+
+int snake_len = 0;
+
+int check_collision(int tail_y[], int tail_x[], int y, int x){
     for (int i = 0; i < snake_len; i++){
         if (tail_x[i] == x && tail_y[i] == y){
-            endwin();
-            exit(0);
+            return 1;
         }
     }
+    return 0;
+}
+
+void set_apple_pos(int tail_y[], int tail_x[]){
+    do {
+        apple_y = rand()% size_y;
+        apple_x = rand()% size_x;
+    } while (check_collision(tail_y, tail_x, apple_y, apple_x));
+}
+
+void draw_snake(int tail_y[], int tail_x[]){
+    for (int i = 0; i < snake_len; i++){
+        mvaddstr(tail_y[i],tail_x[i],"x");
+    }
+}
+
+void grow_snake(int tail_y[], int tail_x[]){
+    tail_y[snake_len] = y;
+    tail_x[snake_len] = x;
+    snake_len += 1;
+}
+
+void snake_len_cut(int tail_y[], int tail_x[]){
+    for (int i = 0; i < snake_len; i++){
+    tail_y[i] = tail_y[i+1];
+    tail_x[i] = tail_x[i+1];
+    }
+    snake_len -= 1;
 }
 
 int main(){
 
     srand(time(NULL));
-
-    int size_y;
-    int size_x;
-
-    int snake_len = 0;
-
     initscr();
     getmaxyx(stdscr,size_y,size_x);
 
@@ -30,15 +59,14 @@ int main(){
     int tail_y[size_yx];
     int tail_x[size_yx];
 
-    int apple_y = rand()% size_y;
-    int apple_x = rand()% size_x;
+    set_apple_pos(tail_y, tail_x);
+    grow_snake(tail_y, tail_x);
 
     while (1){
+        erase();
         mvaddstr(y,x,"x");
         mvaddstr(apple_y,apple_x,"o");
-        for (int i = 0; i <= snake_len; i++){
-            mvaddstr(tail_y[i],tail_x[i],"x");
-        }
+        draw_snake(tail_y, tail_x);
         char key = getch();
         if (key == 'd'){
             x = x + 1;
@@ -65,24 +93,19 @@ int main(){
             x = size_x - 1;
         }
 
-        check_self_eat(snake_len, tail_y, tail_x);
+        if (check_collision(tail_y, tail_x, y, x)){
+            endwin();
+            exit(0);
+        }
 
-        tail_y[snake_len] = y;
-        tail_x[snake_len] = x;
-        snake_len += 1;
+        grow_snake(tail_y, tail_x);
 
         if (x == apple_x && y == apple_y){
-            apple_x = rand()% size_x;
-            apple_y = rand()% size_y;
+            set_apple_pos(tail_y, tail_x);
         }
         else {
-            for (int i = 0; i < snake_len; i++){
-                tail_y[i] = tail_y[i+1];
-                tail_x[i] = tail_x[i+1];
-            }
-            snake_len -= 1;
+            snake_len_cut(tail_y, tail_x);
         }
-        erase();
     }
     endwin();
 
@@ -90,3 +113,4 @@ int main(){
 }
 
 // посмотреть видео по C - Хирьянов youtube лекции по C
+// закодировать змейку при помощи ring buffer в новом файле
