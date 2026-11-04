@@ -53,6 +53,47 @@ class DynamicArray:
                 arr += str(self._array[i])
         return "[" + arr + "]"
 
+    def __iter__(self):
+        for i in range(self.size):
+            yield self._array[i]
+
+    def __contains__(self, value):
+        for i in range(self._size):
+            if self._array[i] == value:
+                return True
+        return False
+
+    def extend(self, iterable):
+        for value in iterable:
+            self.append(value)
+
+    def remove(self, value):
+        idx = self.index(value)
+        self.pop(idx)
+                       
+    def count(self, value):
+        cnt = 0
+        for i in range(self._size):
+            if self._array[i] == value:
+                cnt += 1
+        return cnt
+
+    def clear(self):
+        self._size = 0
+        self._capacity = 10
+        self._array = self._make_array(self._capacity)
+
+    def __delitem__(self, key):
+        self.pop(key)
+
+    def reverse(self):
+        left = 0
+        right = self._size - 1
+        while left < right:
+            self._array[left], self._array[right] = self._array[right], self._array[left]
+            left += 1
+            right -= 1
+
     def _normalize_index(self, key):
         if key < 0:
             key += self._size
