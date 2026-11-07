@@ -62,6 +62,37 @@ struct cell* arr_to_list(int arr[], int arr_len){
     return result;
 }
 
+struct cell* quick_sort(struct cell* a){
+    if (a == NULL || a->next == NULL){
+        return a;
+    }
+    else {
+        struct cell* list_before = NULL;
+        struct cell* list_after = NULL;
+        struct cell* ptr = NULL;
+        struct cell* first = a;
+        a = a->next;
+        
+        while (a != NULL){
+            if (a->num < first->num){
+                ptr = a->next;
+                a->next = list_before;
+                list_before = a;
+                a = ptr;
+            }
+            else {
+                ptr = a->next;
+                a->next = list_after;
+                list_after = a;
+                a = ptr;
+            }
+
+        }
+        first->next = quick_sort(list_after);
+        return concat(quick_sort(list_before), first);
+    }
+}   
+
 int main(){
     // struct cell a;
     // struct cell b;
@@ -70,7 +101,7 @@ int main(){
     // struct cell d;
     // struct cell e;
 
-    int nums[] = {1,2,3,4,5};
+    int nums[] = {5, 3, 8, 2, 7, 1};
 
     // a.num = 1;
     // a.next = &b;
@@ -92,7 +123,7 @@ int main(){
     // printf("%d\n", a.next->num);
     // printf("%d", a.next->next->num);
 
-    struct cell* a = arr_to_list(nums, 5);
+    struct cell* a = arr_to_list(nums, 6);
 
     printf("Original list: \n");
     iterate_over_linked_list(a);
@@ -104,22 +135,26 @@ int main(){
 
     // concat(a,&d);
 
-    printf("\nConcatenated: \n");
-    iterate_over_linked_list(a);
+//     printf("\nConcatenated: \n");
+//     iterate_over_linked_list(a);
 
-    del_last_element(a);
+//     del_last_element(a);
 
-    printf("\nAfter deleting last element: \n");
-    iterate_over_linked_list(a); // Prints: 1 2
+//     printf("\nAfter deleting last element: \n");
+//     iterate_over_linked_list(a); // Prints: 1 2
 
-    printf("\nAdding new element: \n");
-  //  struct cell* new = add_to_list(&a,7);
-    iterate_over_linked_list(add_to_list(a,7));
+//     printf("\nAdding new element: \n");
+//   //  struct cell* new = add_to_list(&a,7);
+//     iterate_over_linked_list(add_to_list(a,7));
 
-    flush_list(a);
+    
     //iterate_over_linked_list(a);
 
+    printf("quick sort:\n");
+    struct cell* sorted = quick_sort(a);
+    iterate_over_linked_list(sorted);
 
+    flush_list(a);
     return 0;
 }
 
@@ -140,8 +175,8 @@ int main(){
 
 // 05.11.2026
 
-// heap -> malloc -> free
-// stack -> input to func - del -> out of func
+// heap: malloc -> free
+// stack: input to func -> deleting on out of func
 
 // HW: list
 // 1. Написать функцию сортировки quick_sort для списка на С
