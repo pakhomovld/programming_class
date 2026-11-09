@@ -1,6 +1,7 @@
 CLAUDE.md
 
 # Compiled binaries
+/build/
 a.out
 *.o
 *.exe
