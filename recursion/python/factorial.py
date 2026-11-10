@@ -1,16 +1,16 @@
 #5! = 1 * 2 * 3 * 4 * 5
 
-def factorial(n):
-    counter = n
-    answer = n
+# def factorial(n):
+#     counter = n
+#     answer = n
 
-    while counter != 1:
-        counter = counter - 1
-        answer = answer * counter
+#     while counter != 1:
+#         counter = counter - 1
+#         answer = answer * counter
 
-    return answer
+#     return answer
 
-print(factorial(1))
+# print(factorial(1))
 
 """
 1! = 1
@@ -34,7 +34,7 @@ def fact(n):
 	else:
 		return fact(n - 1) * n
 
-print(fact(5))
+print(fact(1000))
 
 # Golang
 # Перевести сегодняшний код в Golang
