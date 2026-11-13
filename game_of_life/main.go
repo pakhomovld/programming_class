@@ -14,7 +14,7 @@ func create_matrix(rows, cols int) [][]int {
 }
 
 func print_matrix(arr [][]int) {
-	fmt.Print("\033[H\033[2J")
+	//fmt.Print("\033[H\033[2J")
 
 	for i := 0; i < len(arr); i++ {
 		for j := 0; j < len(arr[i]); j++ {
@@ -81,7 +81,7 @@ func main() {
 	arr[2][1] = 1
 	arr[2][2] = 1
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 60; i++ {
 		print_matrix(arr)
 		arr = next_generation(arr)
 		time.Sleep(200 * time.Millisecond)
