@@ -92,41 +92,76 @@ func delete_last_of_list(a *list) *list {
 	if a.Ptr == nil {
 		return nil
 	}
-	b := &list{}
-	b.Num = a.Num
-	b.Ptr = delete_last_of_list(a.Ptr)
-	return b
+
+	return &list{
+		Num: a.Num,
+		Ptr: delete_last_of_list(a.Ptr),
+	}
 }
-
-// func concat(a *list, b *list) *list {
-// 	if a == nil {
-// 		return b
-// 	}
-
-// 	current := a
-// 	for current.Ptr != nil {
-// 		current = current.Ptr
-// 	}
-// 	current.Ptr = b
-// 	return a
-// }
 
 func concat_recursion(a *list, b *list) *list {
 	if a == nil {
 		return b
 	}
-	if a.Ptr != nil {
-		concat_recursion(a.Ptr, b)
+
+	return &list{
+		Num: a.Num,
+		Ptr: concat_recursion(a.Ptr, b),
 	}
-	if a.Ptr == nil {
-		a.Ptr = b
+}
+
+func delete_by_index(a *list, index int) *list {
+	if a == nil {
+		return nil
 	}
-	return a
+	if index == 0 {
+		return a.Ptr
+	}
+	return &list{
+		Num: a.Num,
+		Ptr: delete_by_index(a.Ptr, index-1),
+	}
+}
+
+func delete_by_num(a *list, value int) *list {
+	if a == nil {
+		return nil
+	}
+	if a.Num == value {
+		return delete_by_num(a.Ptr, value)
+	}
+	return &list{
+		Num: a.Num,
+		Ptr: delete_by_num(a.Ptr, value),
+	}
+}
+
+func contains(a *list, value int) bool {
+	if a == nil {
+		return false
+	}
+	if a.Num == value {
+		return true
+	}
+	return contains(a.Ptr, value)
+}
+
+func del_repeats(a *list) *list {
+	if a == nil {
+		return nil
+	}
+	if contains(a.Ptr, a.Num) {
+		return del_repeats(a.Ptr)
+	}
+	return &list{
+		Num: a.Num,
+		Ptr: del_repeats(a.Ptr),
+	}
 }
 
 func main() {
 
-	arr1 := []int{1, 2, 3, 4, 5}
+	arr1 := []int{1, 2, 2, 3, 4, 4, 4, 4}
 
 	// a := list{}
 	b := list{}
@@ -155,12 +190,28 @@ func main() {
 	// print(last_num_of_list(a))
 	// println()
 	// print(is_sorted(a))
-	a = concat_recursion(a, &b)
+	// a = concat_recursion(a, &b)
+	// print_list(a)
+	// // a = delete_last_of_list(a)
+	// // print_list(a)
+	// println()
+	// a = delete_by_index(a, 5)
+	// print_list(a)
+	// a = delete_by_num(a, 4)
+	// print_list(a)
+	// print(contains(a, 4))
+	// println()
+	// print(contains(a, 2))
+	a = del_repeats(a)
 	print_list(a)
+
 }
 
 // HW: написать функцию сортировки quick sort(как в питоне) - используя списки - done
 // для этого нужна функция конкатенации списков - done
 
 // HW: конкатенация списков с помощью рекурсии - done
-// удаление элемента из списка по его номеру -
+// удаление элемента из списка по его номеру - done
+
+// HW: написать функцию которая берет список и число и удаляет все элементы равные этому числу - done
+// написать функцию которая из списка удаляет повторения - здесь нужна будет функция которая проверяет что в списке есть элемент с таким значением
